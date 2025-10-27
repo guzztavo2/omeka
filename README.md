@@ -41,7 +41,7 @@ password = "omeka"
 dbname   = "omeka"
 host     = "db"
 ```
-*Importante salientar:* O host tem que ser explicitamente definido como "db", que é o nome definido na aplicação do docker-compose.yml. Para caso de já está executando um segundo banco de dados na máquina.
+*Importante salientar:* host do banco de dados tem que ser explicitamente definido como "db", que é o nome definido na aplicação do docker-compose.yml. Para caso de já está executando um segundo banco de dados na máquina.
 ---
 As configurações representantes podem ser identificados no seguinte diretorio do projeto:
 ./docker-compose.yml
@@ -60,3 +60,8 @@ Caso o sistema de algum problema na permissão, basta executar o comando abaixo:
 chmod -R 777 omeka/files
 ````
 
+### Acesso
+Para acessar o sistema, basta acessar o seguinte caminho:
+````bash
+http://localhost:8080
+````
