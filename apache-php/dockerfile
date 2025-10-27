@@ -1,0 +1,16 @@
+FROM php:8.0-apache
+
+RUN apt-get update && apt-get install -y \
+    libpng-dev libjpeg-dev libfreetype6-dev \
+    libxml2-dev imagemagick git unzip nodejs npm \
+    && docker-php-ext-install pdo pdo_mysql mysqli \
+    && docker-php-ext-install xml \
+    && a2enmod rewrite \
+    && docker-php-ext-install intl
+
+
+RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf && \
+    sed -ri 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+WORKDIR /var/www/html
+ENV COMPOSER_HOME=/var/www/html/.composer
