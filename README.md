@@ -59,9 +59,26 @@ Caso o sistema de algum problema na permissão, basta executar o comando abaixo:
 ````bash
 chmod -R 777 omeka/files
 ````
-
 ### Acesso
 Para acessar o sistema, basta acessar o seguinte caminho:
 ````bash
 http://localhost:8080
+````
+### Em caso de erros que é necessário o log
+No diretorio do arquivo: ````omeka/.htaccess````
+
+Você pode atualizar o parametro:
+````
+SetEnv APPLICATION_ENV "production"
+````
+Para:
+````
+SetEnv APPLICATION_ENV "development"
+````
+
+### Alguns erros conhecidos
+As vezes o Omeka também apresenta um problema na hora de criar um diretorio particular de módulos, ai é simplesmente criar o diretório que já funcionará como esperado:
+````bash
+mkdir -p omeka/modules
+chmod -R 777 omeka/modules
 ````
