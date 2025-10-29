@@ -11,31 +11,29 @@ $escape = $this->plugin('escapeHtml');
     <?php endif; ?>
     <input type="text" class="selector-filter" placeholder="<?php echo $translate('Filter properties'); ?>" aria-label="<?php echo $translate('Filter properties'); ?>">
     <ul class="selectable-list">
-
-        <?php foreach ($options as $vocab): ?>
+        <?php foreach ($vocabularies as $vocabulary): ?>
         <?php
-        $vocabulary = $vocab['vocabulary'];
-        $propertyCount = count($vocab['options']);
-        // Don't display vocabs without properties.
-        if (0 === $propertyCount) { continue; }
+        $properties = $vocabulary->properties();
+        if (!$properties) {
+            // Do not render vocabularies without properties.
+            continue;
+        }
         ?>
-        <li class="selector-parent" data-vocabulary-id="<?php echo $escape($vocabulary->id()); ?>">
-            <span><?php echo $escape($vocab['label']); ?></span> (<span class="selector-child-count"><?php echo $propertyCount; ?></span>)
+        <li class='selector-parent'
+            data-vocabulary-id="<?php echo $escape($vocabulary->id()); ?>">
+            <span><?php echo $escape($translate($vocabulary->label())); ?></span> (<span class="selector-child-count"><?php echo count($vocabulary->properties()); ?></span>)
             <ul>
-                <?php foreach ($vocab['options'] as $prop): ?>
-                <?php
-                $property = $prop['property'];
-                $comment = $property->comment();
-                ?>
-                <li class="selector-child"
-                    data-child-search="<?php echo $escape($prop['label']); ?>"
+                <?php foreach ($properties as $property): ?>
+                <?php $propertyComment = $property->comment(); ?>
+                <li class='selector-child'
+                    data-child-search="<?php echo $escape($translate($property->label())); ?>"
                     data-property-id="<?php echo $escape($property->id()); ?>"
                     data-property-term="<?php echo $escape($property->term()); ?>">
-                    <div class="description<?php echo $comment ? '' : ' no-comment'; ?>">
+                    <div class="description <?php echo (isset($propertyComment)) ? '' : 'no-comment'; ?>">
                         <p class="o-icon-info"><span class="screen-reader-text"><?php echo $translate('More info'); ?></span></p>
-                        <p class="field-comment"><?php echo $escape($translate($comment)); ?></p>
+                        <p class="field-comment"><?php echo $escape($translate($propertyComment)); ?></p>
                     </div>
-                    <span class="selectable"><?php echo $escape($prop['label']); ?></span>
+                    <span class="selectable"><?php echo $escape($translate($property->label())); ?></span>
                 </li>
                 <?php endforeach; ?>
             </ul>

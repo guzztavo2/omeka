@@ -40,6 +40,6 @@ class ResourceClassSelect extends AbstractHelper
         }
         $factory = new Factory($this->formElementManager);
         $element = $factory->createElement($spec);
-        return $this->getView()->formSelectSort($element);
+        return $this->getView()->formSelect($element);
     }
 }

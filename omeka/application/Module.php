@@ -22,7 +22,7 @@ class Module extends AbstractModule
     /**
      * This Omeka version.
      */
-    const VERSION = '4.2.0-alpha.1';
+    const VERSION = '4.1.1';
 
     /**
      * The vocabulary IRI used to define Omeka application data.
@@ -61,12 +61,6 @@ class Module extends AbstractModule
             'Omeka\Entity\Media',
             'entity.remove.post',
             [$this, 'deleteMediaFiles']
-        );
-
-        $sharedEventManager->attach(
-            'Omeka\Entity\Asset',
-            'entity.remove.post',
-            [$this, 'deleteAssetFile']
         );
 
         $sharedEventManager->attach(
@@ -200,10 +194,11 @@ class Module extends AbstractModule
                 // Get the favicon href.
                 if (is_numeric($faviconAssetId)) {
                     $faviconAsset = $view->api()->searchOne('assets', ['id' => $faviconAssetId])->getContent();
-                    if ($faviconAsset) {
-                        $view->headLink(['rel' => 'icon', 'href' => $faviconAsset->assetUrl()], 'PREPEND');
-                    }
+                    $href = $faviconAsset ? $faviconAsset->assetUrl() : null;
+                } else {
+                    $href = null; // Passing null clears the favicon.
                 }
+                $view->headLink(['rel' => 'icon', 'href' => $href], 'PREPEND');
             }
         );
 
@@ -344,18 +339,6 @@ class Module extends AbstractModule
     }
 
     /**
-     * Delete the file associated with a removed Asset entity.
-     *
-     * @param ZendEvent $event
-     */
-    public function deleteAssetFile(ZendEvent $event)
-    {
-        $asset = $event->getTarget();
-        $store = $this->getServiceLocator()->get('Omeka\File\Store');
-        $store->delete(sprintf('asset/%s', $asset->getFilename()));
-    }
-
-    /**
      * Refresh resource titles when updating a resource template.
      *
      * @param ZendEvent $event
@@ -453,9 +436,8 @@ class Module extends AbstractModule
         }
 
         $adapter = $event->getTarget();
-
+        $itemAlias = $adapter->createAlias();
         $qb = $event->getParam('queryBuilder');
-        $itemAlias = $qb->createAlias();
         $qb->innerJoin('omeka_root.item', $itemAlias);
 
         // Users can view media they do not own that belong to public items.
@@ -469,7 +451,7 @@ class Module extends AbstractModule
                 $expression,
                 $qb->expr()->eq(
                     "$itemAlias.owner",
-                    $qb->createNamedParameter($identity)
+                    $adapter->createNamedParameter($qb, $identity)
                 )
             );
         }
@@ -497,7 +479,7 @@ class Module extends AbstractModule
         $identity = $this->getServiceLocator()
             ->get('Omeka\AuthenticationService')->getIdentity();
         if ($identity) {
-            $sitePermissionAlias = $qb->createAlias();
+            $sitePermissionAlias = $adapter->createAlias();
             $qb->leftJoin('omeka_root.sitePermissions', $sitePermissionAlias);
 
             $expression = $qb->expr()->orX(
@@ -505,12 +487,12 @@ class Module extends AbstractModule
                 // Users can view all sites they own.
                 $qb->expr()->eq(
                     'omeka_root.owner',
-                    $qb->createNamedParameter($identity)
+                    $adapter->createNamedParameter($qb, $identity)
                 ),
                 // Users can view sites where they have a role (any role).
                 $qb->expr()->eq(
                     "$sitePermissionAlias.user",
-                    $qb->createNamedParameter($identity)
+                    $adapter->createNamedParameter($qb, $identity)
                 )
             );
         }
@@ -744,7 +726,7 @@ class Module extends AbstractModule
 
             $joinConditions = sprintf(
                 'omeka_fulltext_search.id = omeka_root.id AND omeka_fulltext_search.resource = %s',
-                $qb->createNamedParameter($adapter->getResourceName())
+                $adapter->createNamedParameter($qb, $adapter->getResourceName())
             );
             $qb->innerJoin('Omeka\Entity\FulltextSearch', 'omeka_fulltext_search', 'WITH', $joinConditions);
 

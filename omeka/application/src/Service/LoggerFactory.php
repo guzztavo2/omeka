@@ -1,7 +1,6 @@
 <?php
 namespace Omeka\Service;
 
-use Laminas\Log\Exception;
 use Laminas\Log\Logger;
 use Laminas\Log\Writer\Noop;
 use Laminas\Log\Writer\Stream;
@@ -25,13 +24,10 @@ class LoggerFactory implements FactoryInterface
         if (isset($config['logger']['log'])
             && $config['logger']['log']
             && isset($config['logger']['path'])
+            && is_file($config['logger']['path'])
+            && is_writable($config['logger']['path'])
         ) {
-            try {
-                $writer = new Stream($config['logger']['path']);
-            } catch (Exception\RuntimeException $e) {
-                $writer = new Noop;
-                error_log('Omeka S log initialization failed: ' . $e->getMessage());
-            }
+            $writer = new Stream($config['logger']['path']);
         } else {
             $writer = new Noop;
         }

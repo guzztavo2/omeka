@@ -21,14 +21,13 @@ class SearchFilters extends AbstractHelper
      */
     public function __invoke($partialName = null, array $query = null)
     {
-        $view = $this->getView();
         $partialName = $partialName ?: self::PARTIAL_NAME;
 
-        $translate = $view->plugin('translate');
+        $translate = $this->getView()->plugin('translate');
 
         $filters = [];
-        $api = $view->api();
-        $query ??= $view->params()->fromQuery();
+        $api = $this->getView()->api();
+        $query ??= $this->getView()->params()->fromQuery();
         $queryTypes = [
             'eq' => $translate('is exactly'),
             'neq' => $translate('is not exactly'),
@@ -42,18 +41,18 @@ class SearchFilters extends AbstractHelper
             'nres' => $translate('is not resource with ID'),
             'ex' => $translate('has any value'),
             'nex' => $translate('has no values'),
-            'dt' => $translate('has data type'),
-            'ndt' => $translate('does not have data type'),
         ];
 
         foreach ($query as $key => $value) {
             if ($value != null) {
                 switch ($key) {
+                    // Fulltext
                     case 'fulltext_search':
                         $filterLabel = $translate('Search full-text');
                         $filters[$filterLabel][] = $value;
                         break;
 
+                    // Search by class
                     case 'resource_class_id':
                         if (!is_array($value)) {
                             $value = [$value];
@@ -72,6 +71,7 @@ class SearchFilters extends AbstractHelper
                         }
                         break;
 
+                    // Search values (by property or all)
                     case 'property':
                         $index = 0;
                         foreach ($value as $queryRow) {
@@ -120,11 +120,6 @@ class SearchFilters extends AbstractHelper
                                 }
                             }
 
-                            // If this is a data type query, convert the value to
-                            // the data type's label.
-                            $value = in_array($queryType, ['dt', 'ndt'])
-                                ? $view->dataType()->getLabel($value)
-                                : $value;
                             $filters[$filterLabel][] = $value;
                             $index++;
                         }
@@ -134,6 +129,7 @@ class SearchFilters extends AbstractHelper
                         $filters[$filterLabel][] = $value;
                         break;
 
+                    // Search resource template
                     case 'resource_template_id':
                         if (!is_array($value)) {
                             $value = [$value];
@@ -152,6 +148,7 @@ class SearchFilters extends AbstractHelper
                         }
                         break;
 
+                    // Search item set
                     case 'item_set_id':
                         if (!is_array($value)) {
                             $value = [$value];
@@ -169,6 +166,7 @@ class SearchFilters extends AbstractHelper
                             $filters[$filterLabel][] = $filterValue;
                         }
                         break;
+                    // Search not item set
                     case 'not_item_set_id':
                         if (!is_array($value)) {
                             $value = [$value];
@@ -187,6 +185,7 @@ class SearchFilters extends AbstractHelper
                         }
                         break;
 
+                    // Search user
                     case 'owner_id':
                         $filterLabel = $translate('User');
                         try {
@@ -238,14 +237,14 @@ class SearchFilters extends AbstractHelper
             }
         }
 
-        $result = $view->trigger(
+        $result = $this->getView()->trigger(
             'view.search.filters',
             ['filters' => $filters, 'query' => $query],
             true
         );
         $filters = $result['filters'];
 
-        return $view->partial(
+        return $this->getView()->partial(
             $partialName,
             [
                 'filters' => $filters,

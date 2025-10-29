@@ -15,7 +15,6 @@ class Oembed extends AbstractBlockLayout implements TemplateableBlockLayoutInter
 
     protected $defaultData = [
         'url' => null,
-        'url_old' => null,
         'oembed' => null,
         'refresh' => false,
     ];
@@ -40,9 +39,7 @@ class Oembed extends AbstractBlockLayout implements TemplateableBlockLayoutInter
         if (is_string($data['oembed'])) {
             $data['oembed'] = json_decode($data['oembed'], true);
         }
-        // Get the oEmbed response when a) the block is new, b) the user wants
-        // to referesh the existing oEmbed, c) the user changes the oEmbed URL.
-        if (!$data['oembed'] || $data['refresh'] || $data['url'] !== $data['url_old']) {
+        if (!$data['oembed'] || $data['refresh']) {
             $data['oembed'] = $this->oembed->getOembed($data['url'], $errorStore);
         }
         $block->setData($data);
@@ -52,21 +49,31 @@ class Oembed extends AbstractBlockLayout implements TemplateableBlockLayoutInter
     {
         $data = $block ? $block->data() + $this->defaultData : $this->defaultData;
         $form = new Form\Form;
-
+        if (!$data['oembed']) {
+            $form->add([
+                'type' => Form\Element\Url::class,
+                'name' => 'o:block[__blockIndex__][o:data][url]',
+                'options' => [
+                    'label' => 'oEmbed URL', // @translate
+                ],
+                'attributes' => [
+                    'value' => $data['url'],
+                    'required' => true,
+                ],
+            ]);
+            return $view->formCollection($form, false);
+        }
         $form->add([
-            'type' => Form\Element\Url::class,
-            'name' => 'o:block[__blockIndex__][o:data][url]',
+            'type' => Form\Element\Text::class,
+            'name' => 'oembed_url',
             'options' => [
-                'label' => 'oEmbed URL', // @translate
+                'label' => 'oEmbed URL',
             ],
             'attributes' => [
                 'value' => $data['url'],
-                'required' => true,
+                'disabled' => true,
             ],
         ]);
-        if (!$data['oembed']) {
-            return $view->formCollection($form, false);
-        }
         $form->add([
             'type' => Form\Element\Textarea::class,
             'name' => 'oembed_oembed',
@@ -88,7 +95,7 @@ class Oembed extends AbstractBlockLayout implements TemplateableBlockLayoutInter
         ]);
         $form->add([
             'type' => Form\Element\Hidden::class,
-            'name' => 'o:block[__blockIndex__][o:data][url_old]',
+            'name' => 'o:block[__blockIndex__][o:data][url]',
             'attributes' => [
                 'value' => $data['url'],
             ],
@@ -102,12 +109,12 @@ class Oembed extends AbstractBlockLayout implements TemplateableBlockLayoutInter
         ]);
         return sprintf(
             '%s<a href="#" class="expand" aria-label="expand"><h4>%s</h4></a><div class="collapsible">%s%s%s%s</div>',
-            $view->formRow($form->get('o:block[__blockIndex__][o:data][url]')),
+            $view->formRow($form->get('oembed_url')),
             $view->translate('Advanced'),
             $view->formRow($form->get('oembed_oembed')),
             $view->formRow($form->get('o:block[__blockIndex__][o:data][refresh]')),
+            $view->formRow($form->get('o:block[__blockIndex__][o:data][url]')),
             $view->formRow($form->get('o:block[__blockIndex__][o:data][oembed]')),
-            $view->formRow($form->get('o:block[__blockIndex__][o:data][url_old]')),
         );
     }
 

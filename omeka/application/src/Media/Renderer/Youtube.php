@@ -26,7 +26,6 @@ class Youtube implements RendererInterface
 
         // Compose the YouTube embed URL and build the markup.
         $data = $media->mediaData();
-        $title = $media->displayTitle();
         $url = new HttpUri(sprintf('https://www.youtube.com/embed/%s', $data['id']));
         $query = [];
         if (isset($data['start'])) {
@@ -37,11 +36,10 @@ class Youtube implements RendererInterface
         }
         $url->setQuery($query);
         $embed = sprintf(
-            '<iframe width="%s" height="%s" src="%s" title="%s" frameborder="0"%s></iframe>',
+            '<iframe width="%s" height="%s" src="%s" frameborder="0"%s></iframe>',
             $view->escapeHtml($options['width']),
             $view->escapeHtml($options['height']),
             $view->escapeHtml($url),
-            $view->escapeHtml($title ?? $url),
             $options['allowfullscreen'] ? ' allowfullscreen' : ''
         );
         return $embed;

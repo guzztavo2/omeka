@@ -14,7 +14,6 @@
             exThumbImage: 'data-thumb',
             flipVertical: false,
             flipHorizontal: false,
-            getCaptionFromTitleOrAlt: false,
             plugins: [
                 lgThumbnail,lgZoom,lgVideo,lgHash,lgRotate
             ],

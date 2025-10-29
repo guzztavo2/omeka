@@ -190,9 +190,6 @@ abstract class AbstractResourceRepresentation extends AbstractRepresentation
      */
     public function adminUrl($action = null, $canonical = false)
     {
-        if (null === $this->getControllerName()) {
-            return null;
-        }
         $url = $this->getViewHelper('Url');
         return $url(
             'admin/id',

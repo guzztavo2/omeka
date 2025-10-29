@@ -1,12 +1,11 @@
 <?php
 namespace Omeka\Form;
 
-use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerAwareTrait;
 use Laminas\EventManager\Event;
 use Laminas\Form\Form;
 
-class AssetEditForm extends Form implements EventManagerAwareInterface
+class AssetEditForm extends Form
 {
     use EventManagerAwareTrait;
 

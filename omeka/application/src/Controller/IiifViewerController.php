@@ -49,9 +49,6 @@ class IiifViewerController extends AbstractActionController
         if (isset($miradorConfigUser['window.sideBarOpen'])) {
             $miradorConfig['window']['sideBarOpen'] = $miradorConfigUser['window.sideBarOpen'];
         }
-        if (isset($miradorConfigUser['selectedTheme'])) {
-            $miradorConfig['selectedTheme'] = $miradorConfigUser['selectedTheme'];
-        }
 
         $view = new ViewModel;
         $view->setTerminal(true);

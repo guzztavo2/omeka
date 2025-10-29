@@ -50,7 +50,7 @@ class JobAdapter extends AbstractEntityAdapter
     {
         if (is_string($query['sort_by'])) {
             if ('owner_email' == $query['sort_by']) {
-                $ownerAlias = $qb->createAlias();
+                $ownerAlias = $this->createAlias();
                 $qb->leftJoin('omeka_root.owner', $ownerAlias)
                     ->addOrderBy("$ownerAlias.email", $query['sort_order']);
             } else {
@@ -64,13 +64,13 @@ class JobAdapter extends AbstractEntityAdapter
         if (isset($query['class'])) {
             $qb->andWhere($qb->expr()->eq(
                 'omeka_root.class',
-                $qb->createNamedParameter($query['class']))
+                $this->createNamedParameter($qb, $query['class']))
             );
         }
         if (isset($query['status'])) {
             $qb->andWhere($qb->expr()->eq(
                 'omeka_root.status',
-                $qb->createNamedParameter($query['status']))
+                $this->createNamedParameter($qb, $query['status']))
             );
         }
     }

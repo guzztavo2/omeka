@@ -1,13 +1,12 @@
 <?php
 namespace Omeka\Form;
 
-use Laminas\EventManager\EventManagerAwareInterface;
 use Laminas\EventManager\EventManagerAwareTrait;
 use Laminas\EventManager\Event;
 use Laminas\Form\Form;
 use Omeka\Site\Theme\Theme;
 
-class PageLayoutDataForm extends Form implements EventManagerAwareInterface
+class PageLayoutDataForm extends Form
 {
     use EventManagerAwareTrait;
 
@@ -33,16 +32,6 @@ class PageLayoutDataForm extends Form implements EventManagerAwareInterface
             ],
             'attributes' => [
                 'id' => 'template-name',
-            ],
-        ]);
-        $this->add([
-            'name' => 'o:layout_data[class]',
-            'type' => 'text',
-            'options' => [
-                'label' => 'Class', // @translate
-            ],
-            'attributes' => [
-                'id' => 'page-layout-data-class',
             ],
         ]);
         $this->add([

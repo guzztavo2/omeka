@@ -140,10 +140,6 @@
     max-width: 100%;
 }
 
-.media-embed.attachment-count-1 .resource {
-    display: block;
-}
-
 .media-embed.attachment-count-1 {
     width: 100% !important;
 }
@@ -177,10 +173,6 @@
     width: 100vw;
     max-width: 100%;
     align-items: center;
-
-    .resource:last-child {
-        margin-bottom: $spacing-large;
-    }
 }
 
 .media-embed.layout-vertical .iiif_presentation {

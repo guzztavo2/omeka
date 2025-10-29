@@ -65,41 +65,41 @@ class MediaAdapter extends AbstractResourceEntityAdapter
         if (isset($query['item_id']) && is_numeric($query['item_id'])) {
             $qb->andWhere($qb->expr()->eq(
                 'omeka_root.item',
-                $qb->createNamedParameter($query['item_id'])
+                $this->createNamedParameter($qb, $query['item_id'])
             ));
         }
 
         if (!empty($query['media_type'])) {
             $qb->andWhere($qb->expr()->eq(
                 'omeka_root.mediaType',
-                $qb->createNamedParameter($query['media_type'])
+                $this->createNamedParameter($qb, $query['media_type'])
             ));
         }
 
         if (!empty($query['ingester'])) {
             $qb->andWhere($qb->expr()->eq(
                 'omeka_root.ingester',
-                $qb->createNamedParameter($query['ingester'])
+                $this->createNamedParameter($qb, $query['ingester'])
             ));
         }
 
         if (!empty($query['renderer'])) {
             $qb->andWhere($qb->expr()->eq(
                 'omeka_root.renderer',
-                $qb->createNamedParameter($query['renderer'])
+                $this->createNamedParameter($qb, $query['renderer'])
             ));
         }
 
         if (isset($query['site_id']) && is_numeric($query['site_id'])) {
-            $itemAlias = $qb->createAlias();
+            $itemAlias = $this->createAlias();
             $qb->innerJoin(
                 'omeka_root.item', $itemAlias
             );
-            $siteAlias = $qb->createAlias();
+            $siteAlias = $this->createAlias();
             $qb->innerJoin(
                 "$itemAlias.sites", $siteAlias, 'WITH', $qb->expr()->eq(
                     "$siteAlias.id",
-                    $qb->createNamedParameter($query['site_id'])
+                    $this->createNamedParameter($qb, $query['site_id'])
                 )
             );
         }

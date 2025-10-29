@@ -1,7 +1,6 @@
 <?php
 namespace Omeka\View\Helper;
 
-use Omeka\DataType\ConversionTargetInterface;
 use Omeka\DataType\Manager as DataTypeManager;
 use Omeka\DataType\ValueAnnotatingInterface;
 use Laminas\Form\Element\Select;
@@ -46,16 +45,12 @@ class DataType extends AbstractHelper
      * @param string|array $value
      * @param array $attributes
      */
-    public function getSelect($name, $value = null, $attributes = [], $options = [])
+    public function getSelect($name, $value = null, $attributes = [])
     {
-        $valueOptions = [];
+        $options = [];
         $optgroupOptions = [];
         foreach ($this->dataTypes as $dataTypeName) {
             $dataType = $this->manager->get($dataTypeName);
-            if (isset($options['is_conversion_target']) && !($dataType instanceof ConversionTargetInterface)) {
-                // Filter out data types that are not convertable.
-                continue;
-            }
             $label = $dataType->getLabel();
             if ($optgroupLabel = $dataType->getOptgroupLabel()) {
                 // Hash the optgroup key to avoid collisions when merging with
@@ -63,7 +58,7 @@ class DataType extends AbstractHelper
                 $optgroupKey = md5($optgroupLabel);
                 // Put resource data types before ones added by modules.
                 $optionsVal = in_array($dataTypeName, ['resource', 'resource:item', 'resource:itemset', 'resource:media'])
-                    ? 'valueOptions' : 'optgroupOptions';
+                    ? 'options' : 'optgroupOptions';
                 if (!isset(${$optionsVal}[$optgroupKey])) {
                     ${$optionsVal}[$optgroupKey] = [
                         'label' => $optgroupLabel,
@@ -72,16 +67,16 @@ class DataType extends AbstractHelper
                 }
                 ${$optionsVal}[$optgroupKey]['options'][$dataTypeName] = $label;
             } else {
-                $valueOptions[$dataTypeName] = $label;
+                $options[$dataTypeName] = $label;
             }
         }
         // Always put data types not organized in option groups before data
         // types organized within option groups.
-        $valueOptions = array_merge($valueOptions, $optgroupOptions);
+        $options = array_merge($options, $optgroupOptions);
 
         $element = new Select($name);
-        $element->setEmptyOption($options['empty_option'] ?? '')
-            ->setValueOptions($valueOptions)
+        $element->setEmptyOption('')
+            ->setValueOptions($options)
             ->setAttributes($attributes);
         if (!$element->getAttribute('multiple') && is_array($value)) {
             $value = reset($value);

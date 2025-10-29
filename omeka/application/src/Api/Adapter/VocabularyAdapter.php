@@ -159,26 +159,26 @@ class VocabularyAdapter extends AbstractEntityAdapter
     public function buildQuery(QueryBuilder $qb, array $query)
     {
         if (isset($query['owner_id']) && is_numeric($query['owner_id'])) {
-            $userAlias = $qb->createAlias();
+            $userAlias = $this->createAlias();
             $qb->innerJoin(
                 'omeka_root.owner',
                 $userAlias
             );
             $qb->andWhere($qb->expr()->eq(
                 "$userAlias.id",
-                $qb->createNamedParameter($query['owner_id']))
+                $this->createNamedParameter($qb, $query['owner_id']))
             );
         }
         if (isset($query['namespace_uri'])) {
             $qb->andWhere($qb->expr()->eq(
                 "omeka_root.namespaceUri",
-                $qb->createNamedParameter($query['namespace_uri']))
+                $this->createNamedParameter($qb, $query['namespace_uri']))
             );
         }
         if (isset($query['prefix'])) {
             $qb->andWhere($qb->expr()->eq(
                 "omeka_root.prefix",
-                $qb->createNamedParameter($query['prefix']))
+                $this->createNamedParameter($qb, $query['prefix']))
             );
         }
     }

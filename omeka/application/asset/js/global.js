@@ -90,6 +90,7 @@ var Omeka = {
             parent.children('span.selector-child-count').text(count);
         });
         if (filter == '') {
+            selector.find('li.selector-parent').removeClass('show');
             $('.filter-match').removeClass('filter-match');
         }
         selector.find('span.selector-total-count').text(totalCount);
@@ -98,7 +99,7 @@ var Omeka = {
     updateSearch: function () {
         var checkedOption = $("#advanced-options input[type='radio']:checked ");
         $("#search-form").attr("action", checkedOption.data('action'));
-        $("#search-form > input[type='text']").attr("placeholder", checkedOption.data('inputPlaceholder'));
+        $("#search-form > input[type='text']").attr("placeholder", checkedOption.data('inputPlaceholder')).attr("aria-label", checkedOption.data('inputPlaceholder'));
     },
 
     scrollTo: function(wrapper) {
@@ -322,22 +323,16 @@ var Omeka = {
     disableQueryTextInput: function() {
         var queryType = $(this);
         var queryText = queryType.siblings('.query-text');
-        var queryTextDataType = queryType.siblings('.query-text-data-type');
-        if (['dt', 'ndt'].includes(queryType.val())) {
-            queryText.prop('disabled', true).val('');
-            queryTextDataType.prop('disabled', false).show();
-        } else if (['ex', 'nex'].includes(queryType.val())) {
+        if (queryType.val() === 'ex' || queryType.val() === 'nex') {
             queryText.prop('disabled', true);
-            queryTextDataType.prop('disabled', true).hide();
         } else {
             queryText.prop('disabled', false);
-            queryTextDataType.prop('disabled', true).hide();
         }
     },
 
     // Clean the search query of empty or otherwise unneeded inputs.
     cleanSearchQuery: function(form) {
-        form.find(':input:enabled').each(function(index) {
+        form.find(':input').each(function(index) {
             const input = $(this);
             const inputName = input.attr('name');
             const inputValue = input.val();
@@ -362,7 +357,7 @@ var Omeka = {
                     const match = inputName.match(/property\[(\d+)\]\[text\]/);
                     if (match) {
                         const propertyType = form.find(`[name="property[${match[1]}][type]"]`);
-                        if (['eq', 'neq', 'in', 'nin', 'res', 'nres', 'dt', 'ndt'].includes(propertyType.val())) {
+                        if (['eq', 'neq', 'in', 'nin', 'res', 'nres'].includes(propertyType.val())) {
                             form.find(`[name="property[${match[1]}][joiner]"]`).prop('name', '');
                             form.find(`[name="property[${match[1]}][property]"]`).prop('name', '');
                             form.find(`[name="property[${match[1]}][text]"]`).prop('name', '');

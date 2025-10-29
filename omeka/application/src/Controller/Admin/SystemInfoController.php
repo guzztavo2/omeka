@@ -134,12 +134,9 @@ class SystemInfoController extends AbstractActionController
                 $info['Free space']['Local files'] = $this->formatSpace($freeSpaceFiles);
             }
             // Manage the case where directory "original" is mounted separately.
-            $freeSpaceOriginalDir = $freeSpaceFilesDir . '/original';
-            if (file_exists($freeSpaceOriginalDir)) {
-                $freeSpaceOriginal = disk_free_space($freeSpaceOriginalDir);
-                if ($freeSpaceFiles !== $freeSpaceOriginal) {
-                    $info['Free space']['Local files (original)'] = $this->formatSpace($freeSpaceOriginal);
-                }
+            $freeSpaceOriginal = disk_free_space($freeSpaceFilesDir . '/original');
+            if ($freeSpaceFiles !== $freeSpaceOriginal) {
+                $info['Free space']['Local files (original)'] = $this->formatSpace($freeSpaceOriginal);
             }
         }
         $freeSpaceTemp = disk_free_space($this->getDirTemp());

@@ -17,7 +17,7 @@ class LightGalleryOutput extends AbstractHelper
         $view->headScript()->appendFile($view->assetUrl('vendor/lightgallery/plugins/video/lg-video.min.js', 'Omeka'));
         $view->headScript()->appendFile($view->assetUrl('vendor/lightgallery/plugins/rotate/lg-rotate.min.js', 'Omeka'));
         $view->headScript()->appendFile($view->assetUrl('vendor/lightgallery/plugins/hash/lg-hash.min.js', 'Omeka'));
-        $view->headScript()->appendFile($view->assetUrl('js/lg-itemfiles-config.js', 'Omeka', true));
+        $view->headScript()->appendFile($view->assetUrl('js/lg-itemfiles-config.js', 'Omeka'));
         $view->headLink()->prependStylesheet($view->assetUrl('vendor/lightgallery/css/lightgallery-bundle.min.css', 'Omeka'));
         $escape = $view->plugin('escapeHtml');
 
@@ -25,16 +25,15 @@ class LightGalleryOutput extends AbstractHelper
         $mediaCaption = $view->themeSetting('media_caption');
 
         foreach ($files as $file) {
-            $attribs = [];
             $media = $file['media'];
-            if (!empty($file['forceThumbnail'])) {
-                $source = $media->thumbnailUrl('large');
-                $downloadUrl = $media->originalUrl() ?: $source;
-            } else {
-                $source = $downloadUrl = $media->originalUrl() ?: $media->source();
-            }
-
-            $mediaType = $media->mediaType();
+            $source = ($media->originalUrl()) ? $media->originalUrl() : $media->source();
+            $mediaCaptionOptions = [
+                'none' => '',
+                'title' => 'data-sub-html="' . $media->displayTitle() . '"',
+                'description' => 'data-sub-html="' . $media->displayDescription() . '"',
+            ];
+            $mediaCaptionAttribute = ($mediaCaption) ? $mediaCaptionOptions[$mediaCaption] : '';
+            $mediaType = $media->mediatype();
             if (null !== $mediaType && strpos($mediaType, 'video') !== false) {
                 $videoSrcObject = [
                     'source' => [
@@ -61,37 +60,14 @@ class LightGalleryOutput extends AbstractHelper
                     }
                 }
                 $videoSrcJson = json_encode($videoSrcObject);
-                $attribs['data-video'] = $videoSrcJson;
+                $html .= '<div data-video="' . $escape($videoSrcJson) . '" ' . $mediaCaptionAttribute . 'data-thumb="' . $escape($media->thumbnailUrl('medium')) . '" data-download-url="' . $source . '" class="media resource">';
             } elseif ($mediaType == 'application/pdf') {
-                $attribs['data-iframe'] = 'true';
-                $attribs['data-iframe-title'] = $media->altText();
-                $attribs['data-src'] = $source;
+                $html .= '<div data-iframe="' . $escape($source) . '" ' . $mediaCaptionAttribute . 'data-src="' . $source . '" data-thumb="' . $escape($media->thumbnailUrl('medium')) . '" data-download-url="' . $source . '" class="media resource">';
             } else {
-                $attribs['data-src'] = $source;
+                $html .= '<div data-src="' . $source . '" ' . $mediaCaptionAttribute . 'data-thumb="' . $escape($media->thumbnailUrl('medium')) . '" data-download-url="' . $source . '" class="media resource">';
             }
-
-            switch ($mediaCaption) {
-                case 'title':
-                    $attribs['data-sub-html'] = $media->displayTitle();
-                    break;
-                case 'description':
-                    $attribs['data-sub-html'] = $media->displayDescription();
-                    break;
-                case 'none':
-                default:
-                    // no action
-            }
-
-            $attribs['data-thumb'] = $media->thumbnailDisplayUrl('medium');
-            $attribs['data-download-url'] = $downloadUrl;
-            $attribs['class'] = 'media resource';
-            $attribs['title'] = $media->altText();
-
-            $html .= '<div';
-            foreach ($attribs as $attribName => $attribValue) {
-                $html .= ' ' . $attribName . '="' . $escape($attribValue) . '"';
-            }
-            $html .= '></div>';
+            $html .= $media->render();
+            $html .= '</div>';
         }
         $html .= '</div>';
 

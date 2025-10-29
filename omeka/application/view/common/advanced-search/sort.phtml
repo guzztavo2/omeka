@@ -1,15 +1,7 @@
 <?php
 use Laminas\Form\Element;
 
-// Set the sort config context.
-if ($this->status()->isAdminRequest()) {
-    $sortConfigContext = 'admin';
-} elseif ($this->status()->isSiteRequest()) {
-    $sortConfigContext = 'public';
-} else {
-    $sortConfigContext = 'none';
-}
-// Set the sort config resource type.
+$sortConfigContext = $this->status()->isAdminRequest() ? 'admin' : 'public';
 switch ($resourceType) {
     case 'itemSet':
         $sortConfigResourceType = 'item_sets';
@@ -21,7 +13,6 @@ switch ($resourceType) {
     default:
         $sortConfigResourceType = 'items';
 }
-// Get the sort config according to context and resource type.
 $sortConfig = $this->browse()->getBrowseService()->getSortConfig($sortConfigContext, $sortConfigResourceType);
 
 $sortBy = new Element\Select('sort_by');
@@ -40,9 +31,9 @@ $sortOrder->setValueOptions([
 ]);
 $sortOrder->setValue($query['sort_order'] ?? '');
 ?>
-<div class="field" id="sort_field" role="group" aria-labelledby="sort-group-label">
+<div class="field">
     <div class="field-meta">
-        <label id="sort-group-label"><?php echo $this->translate('Sort'); ?></label>
+        <label><?php echo $this->translate('Sort'); ?></label>
     </div>
     <div class="inputs">
         <?php echo $this->formSelect($sortBy); ?>

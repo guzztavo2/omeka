@@ -103,7 +103,7 @@ class Dispatcher
         $this->logger->addWriter(new JobWriter($job));
         try {
             $strategy->send($job);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             $this->logger->err((string) $e);
             $job->setStatus(Job::STATUS_ERROR);
             $job->setEnded(new DateTime('now'));

@@ -7,7 +7,6 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use Omeka\Api\Exception;
 use Omeka\Api\Request;
 use Omeka\Api\Response;
-use Omeka\Db\QueryBuilder as OmekaQueryBuilder;
 use Omeka\Entity\User;
 use Omeka\Entity\EntityInterface;
 use Omeka\Stdlib\ErrorStore;
@@ -21,7 +20,6 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
     /**
      * A unique token index for query builder aliases and placeholders.
      *
-     * @deprecated 4.2.0 No longer used by core code. Use \Omeka\Db\QueryBuilder instead.
      * @var int
      */
     protected $index = 0;
@@ -141,7 +139,7 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
             if ($ids) {
                 $qb->andWhere($qb->expr()->in(
                     'omeka_root.id',
-                    $qb->createNamedParameter($ids)
+                    $this->createNamedParameter($qb, $ids)
                 ));
             }
         }
@@ -181,8 +179,8 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
     public function sortByCount(QueryBuilder $qb, array $query,
         $inverseField, $instanceOf = null
     ) {
-        $inverseAlias = $qb->createAlias();
-        $countAlias = $qb->createAlias();
+        $inverseAlias = $this->createAlias();
+        $countAlias = $this->createAlias();
 
         $qb->addSelect("COUNT($inverseAlias.id) HIDDEN $countAlias");
         if ($instanceOf) {
@@ -258,7 +256,8 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
         $entityClass = $this->getEntityClass();
 
         $this->index = 0;
-        $qb = $this->createQueryBuilder()
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
             ->select('omeka_root')
             ->from($entityClass, 'omeka_root');
         $this->buildBaseQuery($qb, $query);
@@ -274,21 +273,13 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
 
         // Add the LIMIT clause.
         $this->limitQuery($qb, $query);
-        $maxResults = $qb->getMaxResults();
-        $firstResult = $qb->getFirstResult();
 
         // Before adding the ORDER BY clause, set a paginator responsible for
-        // getting the total count (unless configured not to or when no pagination
-        // is set.
-        $countQueryDefault = $maxResults !== null || $firstResult > 0;
-        $countQuery = $request->getOption('countQuery', $countQueryDefault);
-        if ($countQuery) {
-            $countQb = clone $qb;
-            // This optimization excludes the ORDER BY clause from the count
-            // query, greatly speeding up response time.
-            $countQb->select('1')->resetDQLPart('orderBy');
-            $countPaginator = new Paginator($countQb, false);
-        }
+        // getting the total count. This optimization excludes the ORDER BY
+        // clause from the count query, greatly speeding up response time.
+        $countQb = clone $qb;
+        $countQb->select('1')->resetDQLPart('orderBy');
+        $countPaginator = new Paginator($countQb, false);
 
         // Add the ORDER BY clause. Always sort by entity ID in addition to any
         // sorting the adapters add.
@@ -325,7 +316,7 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
             }
             $content = array_column($qb->getQuery()->getScalarResult(), $scalarField, 'id');
             $response = new Response($content);
-            $response->setTotalResults($countQuery ? $countPaginator->count() : count($content));
+            $response->setTotalResults($countPaginator->count());
             return $response;
         }
 
@@ -340,7 +331,7 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
         $entities = [];
         // Don't make the request if the LIMIT is set to zero. Useful if the
         // only information needed is total results.
-        if ($maxResults !== 0) {
+        if ($qb->getMaxResults() || null === $qb->getMaxResults()) {
             foreach ($paginator as $entity) {
                 if (is_array($entity)) {
                     // Remove non-entity columns added to the SELECT. You can use
@@ -352,7 +343,7 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
         }
 
         $response = new Response($entities);
-        $response->setTotalResults($countQuery ? $countPaginator->count() : count($entities));
+        $response->setTotalResults($countPaginator->count());
         return $response;
     }
 
@@ -710,12 +701,12 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
 
         $entityClass = $this->getEntityClass();
         $this->index = 0;
-        $qb = $this->createQueryBuilder();
+        $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('omeka_root')->from($entityClass, 'omeka_root');
         foreach ($criteria as $field => $value) {
             $qb->andWhere($qb->expr()->eq(
                 "omeka_root.$field",
-                $qb->createNamedParameter($value)
+                $this->createNamedParameter($qb, $value)
             ));
         }
         $qb->setMaxResults(1);
@@ -737,20 +728,9 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
     }
 
     /**
-     * Create a query builder.
-     *
-     * @return OmekaQueryBuilder
-     */
-    public function createQueryBuilder()
-    {
-        return new OmekaQueryBuilder($this->getEntityManager());
-    }
-
-    /**
      * Create a unique named parameter for the query builder and bind a value to
      * it.
      *
-     * @deprecated 4.2.0 No longer used by core code. Use \Omeka\Db\QueryBuilder instead.
      * @param QueryBuilder $qb
      * @param mixed $value The value to bind
      * @param string $prefix The placeholder prefix
@@ -768,7 +748,6 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
     /**
      * Create a unique alias for the query builder.
      *
-     * @deprecated 4.2.0 No longer used by core code. Use \Omeka\Db\QueryBuilder instead.
      * @param string $prefix The alias prefix
      * @return string The alias
      */
@@ -801,7 +780,7 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
     public function isUnique(EntityInterface $entity, array $criteria)
     {
         $this->index = 0;
-        $qb = $this->createQueryBuilder();
+        $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('e.id')
             ->from($this->getEntityClass(), 'e');
 
@@ -810,14 +789,14 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
         if ($entity->getId()) {
             $qb->andWhere($qb->expr()->neq(
                 'e.id',
-                $qb->createNamedParameter($entity->getId())
+                $this->createNamedParameter($qb, $entity->getId())
             ));
         }
 
         foreach ($criteria as $field => $value) {
             $qb->andWhere($qb->expr()->eq(
                 "e.$field",
-                $qb->createNamedParameter($value)
+                $this->createNamedParameter($qb, $value)
             ));
         }
         return null === $qb->getQuery()->getOneOrNullResult();
@@ -974,34 +953,13 @@ abstract class AbstractEntityAdapter extends AbstractAdapter implements EntityAd
     }
 
     /**
-     * Get the current state of the entity manager's identity map.
-     *
-     * Use this in conjunction with self::detachAllNewEntities() to avoid memory
-     * allocation issues during batch processes. Save the original identity map
-     * before doing any work, then detach all new entities during every batch.
-     *
-     * @return array
-     */
-    public function getIdentityMap()
-    {
-        return $this->getEntityManager()->getUnitOfWork()->getIdentityMap();
-    }
-
-    /**
-     * Detach all new entities from the entity manager.
-     *
-     * Given an old copy of the Doctrine identity map, reset the entity manager
-     * to that state by detaching all entities that did not exist in the prior
-     * state. Do this instead of explicitly clearing the entity manager to avoid
-     * the uncommon but irksome "A new entity was found" Doctrine errors.
-     *
-     * Use this in conjunction with self::getIdentityMap() to avoid memory
-     * allocation issues during batch processes. Save the original identity map
-     * before doing any work, then detach all new entities during every batch.
+     * Given an old copy of the Doctrine identity map, reset
+     * the entity manager to that state by detaching all entities that
+     * did not exist in the prior state.
      *
      * @param array $oldIdentityMap
      */
-    public function detachAllNewEntities(array $oldIdentityMap)
+    protected function detachAllNewEntities(array $oldIdentityMap)
     {
         $entityManager = $this->getEntityManager();
         $identityMap = $entityManager->getUnitOfWork()->getIdentityMap();
