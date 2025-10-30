@@ -82,3 +82,8 @@ As vezes o Omeka também apresenta um problema na hora de criar um diretorio par
 mkdir -p omeka/modules
 chmod -R 777 omeka/modules
 ````
+
+### Dados usados
+
+Os créditos de acervos utilizados são dadas ao repositório:
+[ClevelandMuseumArt Data](https://github.com/ClevelandMuseumArt/openaccess)
